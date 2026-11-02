@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stats Panels</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050509;
+    --pink: #FF2DAA;
+    --bright: #FF4FC3;
+    --violet: #A82CFF;
+    --lavender: #E7D9FF;
+    --muted: #AAA0C8;
+    --dim: #54204F;
+    --track: rgba(231, 217, 255, 0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--lavender); font-family: 'JetBrains Mono', monospace; }
+  body { padding: 16px; min-height: 100vh; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  h2 {
+    font-size: clamp(18px, 3.2vw, 26px);
+    font-weight: 700;
+    color: var(--lavender);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--dim);
+    margin: 28px 0 16px;
+  }
+
+  /* Angular neon frame, shared by both panels */
+  .panel {
+    position: relative;
+    padding: 6px;
+    border: 1px solid var(--violet);
+    border-radius: 14px;
+    background: radial-gradient(120% 90% at 10% 0%, rgba(168, 44, 255, 0.12), transparent 60%),
+                radial-gradient(120% 90% at 100% 100%, rgba(255, 45, 170, 0.10), transparent 60%),
+                var(--bg);
+    box-shadow: 0 0 14px rgba(168, 44, 255, 0.25), inset 0 0 18px rgba(168, 44, 255, 0.06);
+  }
+  .inner {
+    border: 1px solid var(--pink);
+    border-radius: 10px;
+    padding: clamp(14px, 3vw, 26px);
+    box-shadow: 0 0 10px rgba(255, 45, 170, 0.25), inset 0 0 14px rgba(255, 45, 170, 0.05);
+    overflow: hidden;
+  }
+  .panel-title { font-size: clamp(18px, 3vw, 24px); font-weight: 700; color: var(--lavender); }
+  .panel-sub { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  .tag { font-size: 12px; color: var(--bright); text-shadow: 0 0 6px rgba(255, 45, 170, 0.6); }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+
+  /* Language stack */
+  .lang { display: grid; grid-template-columns: minmax(96px, 150px) 1fr 52px; align-items: center; gap: 12px; padding: 9px 0; }
+  .lang-name { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--lavender); white-space: nowrap; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 6px currentColor; flex: none; }
+  .bar { height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; }
+  .fill { height: 100%; border-radius: 4px; width: 0; transition: width 1.2s ease-out; }
+  .pct { font-size: 12px; text-align: right; color: currentColor; }
+  .lang-list.in .fill { width: var(--w); }
+
+  /* Contribution grid */
+  .legend { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted); }
+  .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .grid { display: grid; grid-template-columns: repeat(53, minmax(0, 1fr)); gap: 3px; margin-top: 6px; position: relative; }
+
+  /* butterfly that flies across the grid and eats active days */
+  .bfly {
+    position: absolute; left: 0; top: 0;
+    width: 16px; height: 12px;
+    transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
+    pointer-events: none; z-index: 2;
+    filter: drop-shadow(0 0 4px rgba(255, 45, 170, 0.9));
+  }
+  .bfly svg { width: 100%; height: 100%; overflow: visible; }
+  .bfly .wl { transform-origin: 8px 6px; animation: flap 0.28s ease-in-out infinite alternate; }
+  @keyframes flap { to { transform: scaleX(0.4); } }
+  .cell.landed { animation: landpulse 0.5s ease-out; }
+  @keyframes landpulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.25); box-shadow: 0 0 10px #FF4FC3; }
+    100% { transform: scale(1); }
+  }
+
+  /* fairy dust trailing behind the butterfly */
+  .dust-p {
+    position: absolute; width: 3px; height: 3px; border-radius: 50%;
+    pointer-events: none; z-index: 1;
+    box-shadow: 0 0 6px currentColor;
+    animation: dustfade 0.9s ease-out forwards;
+  }
+  @keyframes dustfade {
+    0% { opacity: 0.95; transform: translate(0, 0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+  }
+  .cell { aspect-ratio: 1; border-radius: 2px; background: #15111d; }
+  .l1 { background: rgba(168, 44, 255, 0.35); }
+  .l2 { background: rgba(168, 44, 255, 0.7); box-shadow: 0 0 4px rgba(168, 44, 255, 0.5); }
+  .l3 { background: var(--pink); box-shadow: 0 0 5px rgba(255, 45, 170, 0.6); }
+  .l4 { background: var(--bright); box-shadow: 0 0 8px rgba(255, 79, 195, 0.9); }
+  .foot { margin-top: 14px; text-align: right; font-size: 10px; color: var(--muted); opacity: 0.7; }
+
+  /* Small screens: stack the language row, shrink the grid gap */
+  @media (max-width: 560px) {
+    .lang { grid-template-columns: 1fr 44px; row-gap: 6px; }
+    .lang .bar { grid-column: 1 / -1; grid-row: 2; }
+    .lang-name { grid-column: 1; }
+    .pct { grid-column: 2; grid-row: 1; }
+    .grid { gap: 2px; }
+    .bfly { width: 10px; height: 8px; }
+    .dust-p { width: 2px; height: 2px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fill { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h2>Technical toolkit</h2>
+  <div class="panel">
+    <div class="inner">
+      <div class="head">
+        <div>
+          <div class="panel-title">Language Stack</div>
+          <div class="panel-sub">Repository-weighted technologies</div>
+        </div>
+        <div class="tag">&gt; stack.scan</div>
+      </div>
+
+      <div class="lang-list" id="langs">
+        <div class="lang" style="color: var(--pink)">
+          <div class="lang-name"><span class="dot"></span>Python</div>
+          <div class="bar"><div class="fill" style="--w: 77%; background: linear-gradient(90deg, var(--violet), var(--pink));"></div></div>
+          <div class="pct">77%</div>
+        </div>
+        <div class="lang" style="color: var(--bright)">
+          <div class="lang-name"><span class="dot"></span>HTML</div>
+          <div class="bar"><div class="fill" style="--w: 14%; background: linear-gradient(90deg, var(--violet), var(--bright));"></div></div>
+          <div class="pct">14%</div>
+        </div>
+        <div class="lang" style="color: var(--violet)">
+          <div class="lang-name"><span class="dot"></span>TypeScript</div>
+          <div class="bar"><div class="fill" style="--w: 4%; background: var(--violet);"></div></div>
+          <div class="pct">4%</div>
+        </div>
+        <div class="lang" style="color: var(--muted)">
+          <div class="lang-name"><span class="dot"></span>JavaScript</div>
+          <div class="bar"><div class="fill" style="--w: 2%; background: var(--muted);"></div></div>
+          <div class="pct">2%</div>
+        </div>
+        <div class="lang" style="color: var(--lavender)">
+          <div class="lang-name"><span class="dot"></span>C++</div>
+          <div class="bar"><div class="fill" style="--w: 1%; background: var(--lavender);"></div></div>
+          <div class="pct">1%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Consistency signal</h2>
+  <div class="panel">
+    <div class="inner">
+      <div class="head">
+        <div>
+          <div class="panel-title">Contribution Activity</div>
+          <div class="panel-sub"><span data-stat="lastYear">587</span> contributions in the last year</div>
+        </div>
+        <div class="legend">Less
+          <i style="background:#15111d"></i><i style="background:rgba(168,44,255,0.35)"></i><i style="background:rgba(168,44,255,0.7)"></i><i style="background:var(--pink)"></i><i style="background:var(--bright)"></i>
+          More
+        </div>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="foot">live GitHub data, refreshed every 6 hours</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Animate language bars in
+  requestAnimationFrame(() => document.getElementById('langs').classList.add('in'));
+
+  // 53 weeks x 7 days, seeded so the pattern is stable on reload
+  let seed = 587;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const grid = document.getElementById('grid');
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 53 * 7; i++) {
+    const r = rnd();
+    const lvl = r < 0.45 ? 0 : r < 0.7 ? 1 : r < 0.85 ? 2 : r < 0.95 ? 3 : 4;
+    const c = document.createElement('div');
+    c.className = 'cell' + (lvl ? ' l' + lvl : '');
+    frag.appendChild(c);
+  }
+  grid.appendChild(frag);
+
+  // Butterfly flies between active days and eats them, then the grid regrows
+  const bfly = document.createElement('div');
+  bfly.className = 'bfly';
+  bfly.setAttribute('aria-hidden', 'true');
+  bfly.innerHTML =
+    '<svg viewBox="0 0 16 12"><g class="wl">' +
+    '<path d="M8 6 C5 0 0 0 1 4 C1 7 5 7 8 6 Z" fill="#FF4FC3"/>' +
+    '<path d="M8 6 C11 0 16 0 15 4 C15 7 11 7 8 6 Z" fill="#FF4FC3"/></g>' +
+    '<path d="M8 6 C6 8 3 12 5 11 C7 10 8 8 8 6 Z M8 6 C10 8 13 12 11 11 C9 10 8 8 8 6 Z" fill="#FF2DAA"/></svg>';
+  grid.appendChild(bfly);
+
+  const allCells = [...grid.querySelectorAll('.cell')];
+  const food = allCells.filter(c => c.className.indexOf(' l') !== -1);
+  let remaining = [];
+  let pos = { x: 0, y: 0 };
+
+  const centerOf = (c) => ({
+    x: c.offsetLeft + c.offsetWidth / 2 - 8,
+    y: c.offsetTop + c.offsetHeight / 2 - 6
+  });
+
+  function eatNext() {
+    if (!remaining.length) {
+      // all eaten: pause, then regrow the grid and start again
+      setTimeout(() => {
+        food.forEach(c => c.classList.remove('eaten'));
+        remaining = food.slice();
+        eatNext();
+      }, 2000);
+      return;
+    }
+    // pick one of the three nearest uneaten days so the path roams a bit
+    remaining.sort((a, b) => {
+      const pa = centerOf(a), pb = centerOf(b);
+      return Math.hypot(pa.x - pos.x, pa.y - pos.y) - Math.hypot(pb.x - pos.x, pb.y - pos.y);
+    });
+    const pick = Math.floor(Math.random() * Math.min(3, remaining.length));
+    const target = remaining.splice(pick, 1)[0];
+    pos = centerOf(target);
+    bfly.style.left = pos.x + 'px';
+    bfly.style.top = pos.y + 'px';
+    setTimeout(() => {
+      // land on the day with a small pulse, don't eat it
+      target.classList.add('landed');
+      setTimeout(() => target.classList.remove('landed'), 500);
+      eatNext();
+    }, 650);
+  }
+
+  // fairy dust: small particles spawned at the butterfly's position, drifting and fading
+  const dustColors = ['#FF4FC3', '#FF2DAA', '#A82CFF', '#E7D9FF'];
+  const rand = (a, b) => a + Math.random() * (b - a);
+  function spawnDust() {
+    const p = document.createElement('span');
+    p.className = 'dust-p';
+    const x = bfly.offsetLeft + 8 + rand(-3, 3);
+    const y = bfly.offsetTop + 6 + rand(-3, 3);
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    p.style.color = dustColors[Math.floor(Math.random() * dustColors.length)];
+    p.style.background = 'currentColor';
+    p.style.setProperty('--dx', rand(-14, 6) + 'px');
+    p.style.setProperty('--dy', rand(-12, 12) + 'px');
+    grid.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+
+  requestAnimationFrame(() => {
+    pos = centerOf(food[0] || allCells[0]);
+    bfly.style.left = pos.x + 'px';
+    bfly.style.top = pos.y + 'px';
+    remaining = food.slice();
+    setInterval(spawnDust, 110);
+    setTimeout(eatNext, 600);
+  });
+</script>
+<script src="live-stats.js"></script>
+</body>
+</html>

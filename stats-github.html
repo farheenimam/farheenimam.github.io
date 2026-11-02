@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Stats</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050509;
+    --pink: #FF2DAA;
+    --bright: #FF4FC3;
+    --violet: #A82CFF;
+    --lavender: #E7D9FF;
+    --muted: #AAA0C8;
+    --dim: #54204F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--lavender); font-family: 'JetBrains Mono', monospace; }
+  body { padding: 18px 16px; min-height: 100vh; position: relative; overflow-x: hidden; }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 3px);
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+
+  /* terminal prompt line */
+  .prompt {
+    display: inline-block;
+    font-size: clamp(13px, 2.4vw, 18px);
+    color: var(--pink);
+    text-shadow: 0 0 8px rgba(255,45,170,0.6);
+    padding: 10px 16px;
+    border: 1px solid var(--pink);
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(255,45,170,0.25);
+    max-width: 100%;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .prompt .flag { color: var(--violet); text-shadow: 0 0 8px rgba(168,44,255,0.6); }
+  .caret { display: inline-block; width: 8px; height: 15px; background: var(--pink); vertical-align: -2px; margin-left: 4px; animation: blink 1s steps(1) infinite; box-shadow: 0 0 6px var(--pink); }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* angular neon card */
+  .card-outer {
+    margin-top: 16px;
+    padding: 2px;
+    background: linear-gradient(135deg, var(--pink), var(--violet) 55%, var(--pink));
+    clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px);
+    filter: drop-shadow(0 0 12px rgba(255,45,170,0.3));
+  }
+  .card {
+    background: #07060d;
+    padding: clamp(18px, 4vw, 28px);
+    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .card-title {
+    grid-column: 1 / -1;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--bright);
+    text-shadow: 0 0 8px rgba(255,79,195,0.6);
+    letter-spacing: 1px;
+  }
+  .card-title::before { content: '// '; color: var(--violet); }
+
+  .rows { display: grid; gap: 11px; }
+  .row { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 10px; font-size: clamp(12px, 2vw, 14px); }
+  .row .ico { color: var(--bright); text-shadow: 0 0 6px rgba(255,45,170,0.6); text-align: center; font-size: 13px; }
+  .row .k { color: var(--lavender); }
+  .row .v { color: var(--bright); font-weight: 700; text-shadow: 0 0 6px rgba(255,45,170,0.4); }
+  .row .k::after {
+    content: ''; display: inline-block; width: 100%;
+  }
+
+  /* grade ring */
+  .grade { position: relative; width: clamp(110px, 30vw, 150px); height: clamp(110px, 30vw, 150px); }
+  .grade svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+  .grade .track { fill: none; stroke: rgba(168,44,255,0.15); stroke-width: 6; }
+  .grade .arc {
+    fill: none; stroke: url(#g); stroke-width: 6; stroke-linecap: round;
+    stroke-dasharray: 390; stroke-dashoffset: 390;
+    filter: drop-shadow(0 0 6px rgba(255,45,170,0.8));
+    animation: draw 2s ease-out forwards;
+  }
+  @keyframes draw { to { stroke-dashoffset: 31; } }
+  .grade-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .grade-letter { font-size: clamp(30px, 6vw, 40px); font-weight: 700; color: var(--lavender); text-shadow: 0 0 12px rgba(255,45,170,0.7); }
+  .grade-label { font-size: 9px; letter-spacing: 3px; color: var(--muted); margin-top: 2px; }
+
+  .footer { margin-top: 14px; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 0 4px; }
+  .footer .ok { color: var(--bright); }
+
+  /* narrow screens: grade sits above the rows */
+  @media (max-width: 480px) {
+    .card { grid-template-columns: 1fr; justify-items: center; }
+    .card-title { text-align: left; justify-self: stretch; }
+    .rows { width: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .grade .arc { animation: none; stroke-dashoffset: 31; }
+    .caret { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="prompt">
+    &#x1F4CA; &gt; ./stats <span class="flag">--player=farheenimam</span><span class="caret"></span>
+  </div>
+
+  <div class="card-outer">
+    <div class="card">
+      <div class="card-title">My GitHub Statistics</div>
+
+      <div class="rows">
+        <div class="row"><span class="ico">&#9733;</span><span class="k">Total Stars:</span><span class="v" data-stat="stars">7</span></div>
+        <div class="row"><span class="ico">&#8635;</span><span class="k">Total Commits:</span><span class="v" data-stat="commits">1k</span></div>
+        <div class="row"><span class="ico">&#8644;</span><span class="k">Total PRs:</span><span class="v" data-stat="prs">21</span></div>
+        <div class="row"><span class="ico">&#9432;</span><span class="k">Total Issues:</span><span class="v" data-stat="issues">4</span></div>
+        <div class="row"><span class="ico">&#9635;</span><span class="k">Contributed to:</span><span class="v" data-stat="reposContributed">13</span></div>
+      </div>
+
+      <div class="grade">
+        <svg viewBox="0 0 150 150">
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#A82CFF"/>
+              <stop offset="100%" stop-color="#FF2DAA"/>
+            </linearGradient>
+          </defs>
+          <circle class="track" cx="75" cy="75" r="62"/>
+          <circle class="arc" cx="75" cy="75" r="62"/>
+        </svg>
+        <div class="grade-center">
+          <div class="grade-letter">A+</div>
+          <div class="grade-label">GRADE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>status: <span class="ok">active</span></span>
+    <span>source: github</span>
+  </div>
+
+</div>
+<script src="live-stats.js"></script>
+</body>
+</html>

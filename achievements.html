@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Achievements</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050509;
+    --pink: #FF2DAA;
+    --bright: #FF4FC3;
+    --violet: #A82CFF;
+    --lavender: #E7D9FF;
+    --muted: #AAA0C8;
+    --dim: #54204F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--lavender); font-family: 'JetBrains Mono', monospace; }
+  body { padding: 18px 16px; min-height: 100vh; position: relative; overflow-x: hidden; }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 3px);
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+
+  /* one tab, styled like a terminal tab */
+  .tabs { display: flex; }
+  .tab {
+    font-size: 13px; font-weight: 700; color: var(--bright);
+    padding: 9px 26px 8px 18px;
+    border: 1px solid var(--pink); border-bottom: none;
+    background: #07060d;
+    text-shadow: 0 0 8px rgba(255,45,170,0.6);
+    box-shadow: 0 0 10px rgba(255,45,170,0.25);
+    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
+  }
+  .tab::before { content: '> '; color: var(--violet); text-shadow: none; }
+
+  .panel {
+    padding: 2px;
+    background: linear-gradient(135deg, var(--pink), var(--violet) 55%, var(--pink));
+    clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px);
+    filter: drop-shadow(0 0 12px rgba(255,45,170,0.3));
+  }
+  .panel-inner {
+    background: #07060d;
+    padding: clamp(20px, 4vw, 34px);
+    display: grid;
+    grid-template-columns: 1fr minmax(180px, 260px);
+    gap: 28px;
+    align-items: center;
+    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+  }
+
+  .head { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+  .head b { color: var(--bright); font-weight: 400; }
+
+  .list { display: grid; gap: 16px; }
+  .ach {
+    display: grid; grid-template-columns: 62px 1fr; gap: 14px; align-items: start;
+    padding-bottom: 14px; border-bottom: 1px dashed var(--dim);
+  }
+  .ach:last-child { border-bottom: none; padding-bottom: 0; }
+  .rank {
+    font-size: 13px; font-weight: 700; color: var(--bright);
+    border: 1px solid var(--pink); padding: 4px 0; text-align: center;
+    text-shadow: 0 0 6px rgba(255,45,170,0.6);
+    box-shadow: 0 0 8px rgba(255,45,170,0.2);
+  }
+  .rank.gold { color: var(--lavender); border-color: var(--violet); box-shadow: 0 0 8px rgba(168,44,255,0.3); text-shadow: 0 0 6px rgba(168,44,255,0.6); }
+  .ach-title { font-size: 14px; font-weight: 700; color: var(--lavender); }
+  .ach-event { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .ach-desc { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .ach-proj { color: var(--bright); font-weight: 600; }
+
+  /* trophies beside achievement titles */
+  .ach-head { display: flex; align-items: center; gap: 10px; }
+  .trophy {
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 3px;
+    line-height: 1;
+    white-space: pre;
+    flex: none;
+  }
+  .trophy.gold { color: #FFD700; text-shadow: 0 0 4px rgba(255,215,0,0.6); }
+  .trophy.bronze { color: #CD7F32; text-shadow: 0 0 4px rgba(205,127,50,0.6); }
+  .trophy.medal-art { color: #FFD700; text-shadow: 0 0 4px rgba(255,215,0,0.6); }
+
+  /* medal */
+  .medal {
+    margin: 0 0 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 4.5px;
+    line-height: 1.05;
+    color: var(--pink);
+    text-shadow: 0 0 4px rgba(255,45,170,0.6);
+    white-space: pre;
+    text-align: center;
+  }
+
+  /* ascii butterfly that flaps its wings */
+  .bfly-wrap { justify-self: center; }
+  .butterfly {
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 5.5px;
+    line-height: 1.05;
+    color: var(--bright);
+    text-shadow: 0 0 4px rgba(255,45,170,0.7);
+    white-space: pre;
+    transform-origin: 50% 50%;
+    animation: flap 1.1s ease-in-out infinite alternate;
+  }
+  @keyframes flap {
+    0% { transform: scaleX(1); }
+    100% { transform: scaleX(0.55); }
+  }
+
+  .end { margin-top: 18px; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 0 4px; }
+  .end .ok { color: var(--bright); }
+
+  @media (max-width: 640px) {
+    .panel-inner { grid-template-columns: 1fr; }
+    .bfly-wrap { order: -1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .butterfly { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab">achievements.log</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-inner">
+
+      <div>
+        <div class="head"><b>$</b> cat achievements.log | sort -r</div>
+        <div class="list">
+
+          <div class="ach">
+            <div class="rank gold">[1st]</div>
+            <div>
+              <div class="ach-head"><pre class="trophy gold" aria-hidden="true">⠀⠀⠀⠀⠀⠀⠀⠀⢠⣤⡄⢠⣤⣤⣤⣤⣤⣤⡄⢠⣤⡄⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⢸⣿⣿⣿⣿⣿⣿⡇⢸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⢸⣿⣿⣿⣿⣿⣿⡇⢸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⢸⣿⣿⣿⣿⣿⣿⡇⢸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⢸⣿⣿⣿⣿⣿⣿⡇⢸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⢸⣿⣿⣿⣿⣿⣿⡇⢸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠃⠘⠛⠛⠛⠛⠛⠛⠃⠘⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠛⠛⠛⠛⠛⠛⠛⠛⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣶⣶⠂⣰⣶⣶⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣾⣿⣿⡏⢠⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⡈⠻⣿⣿⣶⣾⣿⣿⣿⣿⠿⠋⡀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣶⣄⠙⣿⣿⣿⣿⣟⢁⣴⣾⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⣿⡏⢠⣿⠟⠛⢿⣿⣿⣿⡿⠁⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠀⠀⣠⣶⣷⣤⡈⠛⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠛⠛⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</pre><div class="ach-title">Zab-e-Fest 2026</div></div>
+              <div class="ach-event">200+ teams</div>
+              <div class="ach-desc"><span class="ach-proj">CIRO</span>: Crisis Intelligence &amp; Response Orchestrator. Multi-agent system detecting urban incidents in real time with multi-LLM routing.</div>
+            </div>
+          </div>
+
+          <div class="ach">
+            <div class="rank">[3rd]</div>
+            <div>
+              <div class="ach-head"><pre class="trophy bronze" aria-hidden="true">⠀⠀⠀⠀⠀⠀⠀⠀⢠⣤⡄⢠⣤⣤⣤⣤⣤⣤⡄⢠⣤⡄⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⢸⣿⣿⣿⣿⣿⣿⡇⢸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⢸⣿⣿⣿⣿⣿⣿⡇⢸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⢸⣿⣿⣿⣿⣿⣿⡇⢸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⢸⣿⣿⣿⣿⣿⣿⡇⢸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⢸⣿⣿⣿⣿⣿⣿⡇⢸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠃⠘⠛⠛⠛⠛⠛⠛⠃⠘⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠛⠛⠛⠛⠛⠛⠛⠛⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣶⣶⠂⣰⣶⣶⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣾⣿⣿⡏⢠⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⡈⠻⣿⣿⣶⣾⣿⣿⣿⣿⠿⠋⡀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣶⣄⠙⣿⣿⣿⣿⣟⢁⣴⣾⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⣿⡏⢠⣿⠟⠛⢿⣿⣿⣿⡿⠁⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠀⠀⣠⣶⣷⣤⡈⠛⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠛⠛⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</pre><div class="ach-title">IBM TechXchange 2026 Dev Day</div></div>
+              <div class="ach-event">Hackathon</div>
+              <div class="ach-desc"><span class="ach-proj">Sonar</span>: multi-agent engineering audit platform. Real-time code analysis, pattern detection, automated recommendations.</div>
+            </div>
+          </div>
+
+          <div class="ach">
+            <div class="rank">[top18]</div>
+            <div>
+              <div class="ach-head"><pre class="trophy medal-art" aria-hidden="true">⠀⠀⠀⠀⢀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⠀⠀⠀⠀
+⢠⣤⣤⣤⣼⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣄⣤⣤⣠
+⢸⠀⡶⠶⠾⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡷⠶⠶⡆⡼
+⠈⡇⢷⠀⠀⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⠇⠀⢸⢁⡗
+⠀⢹⡘⡆⠀⢹⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡸⠀⢀⡏⡼⠀
+⠀⠀⢳⡙⣆⠈⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠇⢀⠞⡼⠁⠀
+⠀⠀⠀⠙⣌⠳⣼⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣞⡴⣫⠞⠀⠀⠀
+⠀⠀⠀⠀⠈⠓⢮⣻⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡼⣩⠞⠉⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠉⠛⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠞⠋⠁⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⢤⣀⠀⠀⠀⠀⢀⣠⠖⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⡇⢸⡏⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠖⠒⠓⠚⠓⠒⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⣀⣠⣞⣉⣉⣉⣉⣉⣉⣉⣉⣉⣉⣙⣆⣀⡀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠓⠲⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠖⠃⠀⠀⠀⠀⠀
+</pre><div class="ach-title">Google AI Seekho 2026</div></div>
+              <div class="ach-event">700+ teams</div>
+              <div class="ach-desc"><span class="ach-proj">Aria</span>: Google Workspace conversational agent controlling Gmail, Docs, Calendar and Drive through natural language.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="bfly-wrap">
+        <pre class="butterfly" aria-hidden="true">                        @@                    W@.
+                        @`                    ~M[
+                        M                     `]`
+                        ].                    ,/
+                        `N.                  ,/`
+                         `N.                ,Z'                     ,_gm
+ ]s.                      'Vs.            ,zf'                ,_gmm*f~Y@
+,@*Mms.                    `~N_         ,zf"           __gmY**~~"'  `"W*
+]@"'`~*Wm__.                   \s.    ,vf"       _gmZf*~~"'          i@'
+]@.    `"~~~~~~****=m__.        "\. ,if"     ,gZf`                  ,dP
+`Ys                   ~V+s.      `Y.]f'    _Z*`                    ,iP`
+ `N.                     '~+s.  _m****s. ,W~"            ,____.   ,gA`
+  `N.   ,_mW@m.             'N_]P"'   'WmA`            ,m@KXXA@i ,WA`
+   'N.  @5WmmP@i             `~@.     ,@~'             !@]@@@K@[,df'
+    `Wi @A@@@b@!              `!W.   _Wf'              `*KXX8Wf'!@'
+     'W '*mmW*`               ,_g@A*M@___.               '~~`   @P
+      Y                    _gf~~MA"'`YA~~VWs.                   @[
+      ]                 ,Zf~"' "][   ]b"' "~Ns.                 ]b
+      W     ___       ,W*"'     W`   `@     "!s.       i@f@i    ]@
+      Y.   i@~@[     ,W`        @     @       'Ms.     '*Yf'    ]@
+      ]W.   '**'   ,i@`        ,@.   ,P        'VW.            ,]@
+      'Mi.        ,dA`        ,gW[  ,i[.        `~*ms.        ,mf'
+       `Ve.     ,mAf'       ,gA~`W.,gW~Nm.        `"V*Wmm___g=f"
+         "~Vm==*~`        ,gf`   `***`  'M.            '~~~@`
+          `]|"'          _Z`             `!m.            `"@.
+           ]A.         ,Wf'                'M_            ,A-
+           `VW.      ,gP`                    'Ve_.      ,g@`
+             '~+s.   df'                         ~e_   ,@f'
+               `"Vi  ['                           "V[ i@`
+                 `K  b.                            mP '@.
+                 ][  Ys                            V[. Y[
+                 ][.,]@                            `+s_d[
+                 '+em@f                              '~~'
+</pre>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="end">
+    <span>status: <span class="ok">3 entries loaded</span></span>
+    <span>exit 0</span>
+  </div>
+</div>
+</body>
+</html>

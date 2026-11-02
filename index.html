@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farheen Imam - Neon Terminal Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #FF2DAA;
+    --bright: #FF4FC3;
+    --violet: #A82CFF;
+    --lavender: #E7D9FF;
+    --muted: #AAA0C8;
+    --dim: #54204F;
+    --bg: #050509;
+    --glow: 0 0 8px rgba(255, 45, 170, 0.55);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); overflow: hidden; }
+  body { font-family: 'JetBrains Mono', monospace; }
+
+  /* The whole banner is one fixed 1280x640 stage. JS scales it to fit the window,
+     so proportions never change between screen sizes. */
+  .stage {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    width: 1280px;
+    height: 640px;
+    transform: translate(-50%, -50%) scale(var(--s, 1));
+    background: var(--bg);
+    border: 2px solid var(--violet);
+    box-shadow: 0 0 14px rgba(168, 44, 255, 0.45), inset 0 0 18px rgba(168, 44, 255, 0.15);
+    overflow: hidden;
+  }
+
+  /* faint grain and vignette */
+  .stage::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(255, 45, 170, 0.04), transparent 45%),
+      radial-gradient(circle at 100% 100%, rgba(168, 45, 255, 0.05), transparent 45%);
+    pointer-events: none;
+  }
+
+  /* terminal prompt */
+  .term {
+    position: absolute;
+    left: 20px;
+    top: 26px;
+    font-size: 20px;
+    color: var(--pink);
+    text-shadow: var(--glow);
+    white-space: nowrap;
+    z-index: 20;
+  }
+  .cursor {
+    display: inline-block;
+    width: 11px; height: 19px;
+    background: var(--pink);
+    margin-left: 6px;
+    vertical-align: -3px;
+    box-shadow: var(--glow);
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* heading panel */
+  .main-panel {
+    position: absolute;
+    top: 12%;
+    left: 50%;
+    width: 60%;
+    height: 30%;
+    transform: translateX(-50%);
+    z-index: 15;
+  }
+  .frame {
+    position: relative;
+    width: 100%; height: 100%;
+    border: 2px solid var(--pink);
+    background: transparent;
+    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+    box-shadow: inset 0 0 14px rgba(255, 45, 170, 0.06), 0 0 12px rgba(255, 45, 170, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 24px;
+  }
+  .dots {
+    position: absolute;
+    top: 14px; left: 16px;
+    display: flex; gap: 6px;
+  }
+  .dots i {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--pink);
+    box-shadow: var(--glow);
+  }
+  .name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 52px;
+    line-height: 1;
+    letter-spacing: 2px;
+    color: var(--pink);
+    text-shadow: var(--glow), 0 0 22px rgba(255, 45, 170, 0.35);
+    white-space: nowrap;
+  }
+  .role {
+    margin-top: 26px;
+    font-size: 20px;
+    color: var(--lavender);
+    letter-spacing: 1px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .role .sep { color: var(--pink); text-shadow: var(--glow); }
+  .deco { color: var(--pink); opacity: 0.7; text-shadow: var(--glow); font-size: 16px; letter-spacing: 2px; }
+
+  /* technical focus panel */
+  .sec-panel {
+    position: absolute;
+    top: 46%;
+    left: 50%;
+    width: 60%;
+    height: 13%;
+    transform: translateX(-50%);
+    border: 2px solid var(--violet);
+    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+    box-shadow: inset 0 0 12px rgba(168, 45, 255, 0.05), 0 0 10px rgba(168, 45, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 14;
+  }
+  .sec {
+    font-size: 16px;
+    color: var(--lavender);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .sec b { color: var(--violet); font-weight: 400; margin: 0 10px; }
+
+  /* tagline, types out once */
+  .tagline {
+    position: absolute;
+    top: 65%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 12;
+  }
+  .tagline span {
+    display: inline-block;
+    font-size: 20px;
+    color: var(--pink);
+    text-shadow: var(--glow);
+    white-space: nowrap;
+    overflow: hidden;
+    width: 0;
+    border-right: 2px solid var(--pink);
+    padding-right: 4px;
+    animation: typing 4s steps(76, end) forwards, blink-cursor 0.75s step-end infinite;
+  }
+  @keyframes typing { to { width: 76ch; } }
+  @keyframes blink-cursor { 50% { border-right-color: transparent; } }
+
+  /* butterfly, scanner and progress bar, centered under the tagline */
+  .bfly {
+    position: absolute;
+    left: 50%;
+    top: 76%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    z-index: 25;
+  }
+  .scan-window {
+    position: relative;
+    line-height: 0;
+    padding: 6px;
+  }
+  .scan-window img {
+    width: 64px;
+    height: auto;
+    display: block;
+    mix-blend-mode: screen;
+    filter: brightness(1.1) saturate(1.2);
+  }
+  .beam {
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), #FF2DAA, rgba(255,255,255,0.6), transparent);
+    box-shadow: 0 0 10px rgba(255, 45, 170, 0.8);
+    opacity: 0;
+    animation: scan 2.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes scan {
+    0% { top: 0; opacity: 0; }
+    10%, 90% { opacity: 1; }
+    100% { top: calc(100% - 3px); opacity: 0; }
+  }
+
+  /* four separate L-shaped corner brackets */
+  .corner {
+    position: absolute;
+    width: 16px; height: 16px;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    filter: drop-shadow(0 0 3px rgba(255, 45, 170, 0.7));
+  }
+  .corner-tl { top: -2px; left: -2px; background-image: linear-gradient(var(--pink), var(--pink)), linear-gradient(var(--pink), var(--pink)); background-size: 16px 2px, 2px 16px; background-position: left top, left top; }
+  .corner-tr { top: -2px; right: -2px; background-image: linear-gradient(var(--pink), var(--pink)), linear-gradient(var(--pink), var(--pink)); background-size: 16px 2px, 2px 16px; background-position: right top, right top; }
+  .corner-bl { bottom: -2px; left: -2px; background-image: linear-gradient(var(--pink), var(--pink)), linear-gradient(var(--pink), var(--pink)); background-size: 16px 2px, 2px 16px; background-position: left bottom, left bottom; }
+  .corner-br { bottom: -2px; right: -2px; background-image: linear-gradient(var(--pink), var(--pink)), linear-gradient(var(--pink), var(--pink)); background-size: 16px 2px, 2px 16px; background-position: right bottom, right bottom; }
+
+  .scan-label {
+    font-size: 12px;
+    color: var(--pink);
+    text-shadow: var(--glow);
+    white-space: nowrap;
+    margin-top: -4px;
+  }
+  .bar {
+    width: 60px;
+    height: 9px;
+    border: 1px solid var(--pink);
+    padding: 1px;
+    display: flex;
+    gap: 2px;
+    background: rgba(5, 5, 9, 0.6);
+    box-shadow: 0 0 4px rgba(255, 45, 170, 0.5);
+  }
+  .bar i {
+    flex: 1;
+    background: var(--pink);
+    box-shadow: var(--glow);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  .bar i:nth-child(2) { animation-delay: 0.3s; }
+  .bar i:nth-child(3) { animation-delay: 0.6s; }
+  .bar i:nth-child(4) { animation-delay: 0.9s; }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 1; }
+  }
+
+  /* background decoration */
+  .contour {
+    position: absolute;
+    bottom: 0;
+    width: 240px; height: 240px;
+    border: 1px solid var(--violet);
+    opacity: 0.15;
+    box-shadow: inset 0 0 20px var(--violet);
+  }
+  .contour-left { left: 0; border-right: none; border-top: none; border-radius: 50% 0 0 0; }
+  .contour-right { right: 0; border-left: none; border-top: none; border-radius: 0 0 0 50%; }
+  .glitch {
+    position: absolute;
+    font-size: 10px;
+    color: var(--pink);
+    opacity: 0.25;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; }
+    .tagline span { width: 76ch; border-right-color: transparent; }
+    .beam { opacity: 0.6; top: 40%; }
+    .cursor { opacity: 1; }
+    .bar i { opacity: 0.8; }
+  }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <div class="term">farheen@github:~$<span class="cursor"></span></div>
+
+  <section class="main-panel">
+    <div class="frame">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <div class="name">FARHEEN IMAM</div>
+      <div class="role"><span class="deco">&gt;&gt;&gt;</span>AI Engineer<span class="sep">•</span>Backend Developer<span class="deco">&lt;&lt;&lt;&lt;</span></div>
+    </div>
+  </section>
+
+  <section class="sec-panel">
+    <div class="sec">LLM<b>×</b>AI Agents<b>×</b>Multi-Agent Systems<b>×</b>Automation</div>
+  </section>
+
+  <div class="tagline">
+    <span>Designing intelligent autonomous systems that think, decide, and automate.</span>
+  </div>
+
+  <div class="bfly">
+    <div class="scan-window">
+      <img src="assets/butterfly.png" alt="Butterfly">
+      <div class="beam"></div>
+      <span class="corner corner-tl"></span>
+      <span class="corner corner-tr"></span>
+      <span class="corner corner-bl"></span>
+      <span class="corner corner-br"></span>
+    </div>
+    <div class="scan-label">&gt; scanning...</div>
+    <div class="bar"><i></i><i></i><i></i><i></i></div>
+  </div>
+
+  <div class="contour contour-left"></div>
+  <div class="contour contour-right"></div>
+  <div class="glitch" style="top: 10%; left: 4%;">┃┃</div>
+  <div class="glitch" style="bottom: 12%; right: 5%;">+ +</div>
+  <div class="glitch" style="top: 44%; left: 2.5%;">×</div>
+
+</div>
+
+<script>
+  // scale the fixed 1280x640 stage to fit the window
+  const stage = document.getElementById('stage');
+  function fit() {
+    const s = Math.min((innerWidth - 16) / 1284, (innerHeight - 16) / 644);
+    stage.style.setProperty('--s', s);
+  }
+  fit();
+  addEventListener('resize', fit);
+</script>
+</body>
+</html>
